@@ -14,7 +14,7 @@ function register(req, res) {
   // implement user registration
   //take in user data, hash pw, save to database
   let newUser = req.body;
-  const hash = bcrypt.hashSync(user.password, 10);
+  const hash = bcrypt.hashSync(newUser.password, 10);
   newUser.password = hash
   Users.add(newUser)
     .then(user => {
@@ -26,6 +26,18 @@ function register(req, res) {
 
 function login(req, res) {
   // implement user login
+  //find by username, check input pw against stored pw, return token
+  let { username, password } = req.body;
+  Users.findBy({ username }).first()
+    .then(user => {
+      if(bcrypt.compareSync(password, user.password)){
+        const token = makeToken(user);
+        res.status(200).json({username, token});
+      } else {
+        res.status(401).json({ msg: 'incorrect pw'});
+      }
+    })
+    .catch(err => res.status(500).json({ msg: 'user not found', err}));
 }
 
 function getJokes(req, res) {
